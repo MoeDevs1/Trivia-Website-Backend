@@ -25,8 +25,10 @@ public class User implements UserDetails {
     private Integer Id;
     private String lastName;
     private String firstName;
+    @Column(unique = true)
     private String email;
     private String password;
+    @Column(unique = true)
     private String userName;
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -43,7 +45,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return password;
+        return email;
     }
 
     @Override
@@ -53,12 +55,12 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
