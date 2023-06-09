@@ -12,31 +12,37 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
+
+
+
+
+
+
+
 
     private static final String secretKey = "5971337336763979244226452948404D635166546A576E5A7234753777217A25\n";
     public String extractUserName(String token) {
         // Implementation goes here...
         return extractClaim(token, Claims::getSubject);
     }
-    public String tokenGenerator(UserDetails userDetails){
+    public String tokenGenerator(UserDetails userDetails) {
         return tokenGenerator(new HashMap<>(), userDetails);
     }
 
+    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails details) {
+        Claims claims = Jwts.claims();
+        claims.putAll(extraClaims);
 
-    public String tokenGenerator(
-            Map<String, Object> extraClaims,
-            UserDetails details
-    ){
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
+        return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(details.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 *60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
