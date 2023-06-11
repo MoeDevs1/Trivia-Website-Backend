@@ -30,11 +30,13 @@ public class User implements UserDetails {
     private String userName;
     @Enumerated(EnumType.STRING)
     private Role role;
+    private boolean googleSignup; // New field for Google signup users
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
+
 
     @Override
     public String getPassword() {
@@ -45,6 +47,7 @@ public class User implements UserDetails {
     public String getUsername() {
         return userName;
     }
+
 
     @Override
     public boolean isAccountNonExpired() {
@@ -65,4 +68,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 }

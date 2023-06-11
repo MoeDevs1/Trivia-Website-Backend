@@ -1,7 +1,9 @@
+package com.muslimtrivia.Trivia.auth;
 
-
-  package com.muslimtrivia.Trivia.auth;
-
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.muslimtrivia.Trivia.config.JwtService;
 import com.muslimtrivia.Trivia.user.Role;
 import com.muslimtrivia.Trivia.user.User;
@@ -14,63 +16,134 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-    @Service
-    @RequiredArgsConstructor
-    public class AuthService {
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Collections;
+import java.util.UUID;
 
-        private final PasswordEncoder passwordEncoder;
-        private final UserRepository repository;
-        private final JwtService jwtService;
-        private final AuthenticationManager authenticationManager;
+@Service
+@RequiredArgsConstructor
+public class AuthService {
 
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository repository;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-        public AuthResponse register(RegisterRequest request) {
-            if (repository.existsByEmail(request.getEmail())) {
+    public AuthResponse register(RegisterRequest request) {
+        if (repository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email is already registered. Please choose a different email.");
+        }
+
+        if (repository.existsByUserName(request.getUserName())) {
+            throw new RuntimeException("Username is already taken. Please choose a different username.");
+        }
+
+        var user = User.builder()
+                .email(request.getEmail())
+                .userName(request.getUserName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .build();
+        repository.save(user);
+        var jwtToken = jwtService.tokenGenerator(user);
+        return new AuthResponse().builder()
+                .token(jwtToken)
+                .build();
+    }
+
+    public AuthResponse authenticate(AuthRequest request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+            var user = repository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            var jwtToken = jwtService.tokenGenerator(user);
+            return new AuthResponse().builder()
+                    .token(jwtToken)
+                    .build();
+        } catch (UsernameNotFoundException e) {
+            throw new RuntimeException("User not found. Please check your email.");
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid credentials. Email or password is incorrect.");
+        } catch (Exception e) {
+            throw new RuntimeException("Authentication failed: " + e.getMessage());
+        }
+    }
+
+    public AuthResponse registerGoogle(GoogleRegisterRequest request) throws GeneralSecurityException, IOException {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
+                .setAudience(Collections.singletonList("955085585863-ot8g3rsrvc09ekpiifs07roalvaq5p5j.apps.googleusercontent.com")) // Use your client ID here
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(request.getToken());
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String firstName = (String) payload.get("given_name"); // Extract the user's first name from the payload
+
+            if (repository.existsByEmail(email)) {
                 throw new RuntimeException("Email is already registered. Please choose a different email.");
             }
 
-            if (repository.existsByUserName(request.getUserName())) {
-                throw new RuntimeException("Username is already taken. Please choose a different username.");
-            }
-
+            String userName = generateUniqueUsername(firstName);
             var user = User.builder()
-                    .email(request.getEmail())
-                    .userName((request.getUserName()))
-                    .password(passwordEncoder.encode(request.getPassword()))
+                    .email(email)
+                    .userName(userName)
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Storing a hashed random password instead of null
                     .role(Role.USER)
+                    .googleSignup(true) // Set googleSignup to true for Google signup
                     .build();
+
             repository.save(user);
             var jwtToken = jwtService.tokenGenerator(user);
             return new AuthResponse().builder()
                     .token(jwtToken)
                     .build();
+        } else {
+            throw new RuntimeException("Invalid Google token.");
         }
-
-
-        public AuthResponse authenticate(AuthRequest request) {
-            try {
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getEmail(),
-                                request.getPassword()
-                        )
-                );
-
-                var user = repository.findByEmail(request.getEmail())
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-                var jwtToken = jwtService.tokenGenerator(user);
-                return new AuthResponse().builder()
-                        .token(jwtToken)
-                        .build();
-            } catch (UsernameNotFoundException e) {
-                throw new RuntimeException("User not found. Please check your email.");
-            } catch (BadCredentialsException e) {
-                throw new BadCredentialsException("Invalid credentials. Email or password is incorrect.");
-            } catch (Exception e) {
-                throw new RuntimeException("Authentication failed: " + e.getMessage());
-            }
-        }
-
-
     }
+
+    private String generateUniqueUsername(String firstName) {
+        String baseUsername = firstName.replaceAll("\\s+", "").toLowerCase();
+        String username = baseUsername;
+        int count = 1;
+        while (repository.existsByUserName(username)) {
+            username = baseUsername + count;
+            count++;
+        }
+        return username;
+    }
+
+    public AuthResponse loginGoogle(GoogleRegisterRequest request) throws GeneralSecurityException, IOException {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
+                .setAudience(Collections.singletonList("955085585863-ot8g3rsrvc09ekpiifs07roalvaq5p5j.apps.googleusercontent.com"))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(request.getToken());
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+
+            // Check if the user exists in your system
+            var user = repository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            // Generate the JWT token
+            var jwtToken = jwtService.tokenGenerator(user);
+            return new AuthResponse().builder()
+                    .token(jwtToken)
+                    .build();
+        } else {
+            throw new RuntimeException("Invalid Google token.");
+        }
+    }
+
+}

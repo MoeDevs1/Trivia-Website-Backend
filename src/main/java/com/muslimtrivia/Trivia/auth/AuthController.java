@@ -27,20 +27,24 @@ public class AuthController {
         return ResponseEntity.ok(service.authenticate(request));
     }
 
-    @GetMapping("/google/signup")
-    public ResponseEntity<AuthResponse> signudpWithGoogle(
-            @RequestParam("code") String code,
-            OAuth2AuthenticationToken authenticationToken
-    ) {
-        String userName = authenticationToken.getPrincipal().getAttribute("name");
-        String email = authenticationToken.getPrincipal().getAttribute("email");
-        String token = authenticationToken.getPrincipal().getAttribute("sub");
-
-        // Pass the required details to the service for signup
-        RegisterRequest request = new RegisterRequest();
-        request.setUserName(userName);
-        request.setEmail(email);
-        request.setPassword(token);
-        return ResponseEntity.ok(service.register(request));
+    @PostMapping("/register/google")
+    public ResponseEntity<AuthResponse> registerGoogle(@RequestBody GoogleRegisterRequest request) {
+        try {
+            AuthResponse response = service.registerGoogle(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            throw new RuntimeException("Registration failed: " + e.getMessage());
+        }
     }
+
+    @PostMapping("/login/google")
+    public ResponseEntity<AuthResponse> loginGoogle(@RequestBody GoogleRegisterRequest request) {
+        try {
+            AuthResponse response = service.loginGoogle(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            throw new RuntimeException("Login failed: " + e.getMessage());
+        }
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.muslimtrivia.Trivia.config;
 
+import com.muslimtrivia.Trivia.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -18,36 +19,36 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-
-
-
-
-
-
-
     private static final String secretKey = "5971337336763979244226452948404D635166546A576E5A7234753777217A25\n";
-    public String extractUserName(String token) {
-        // Implementation goes here...
+
+    public String extractEmail (String token) {
         return extractClaim(token, Claims::getSubject);
     }
-    public String tokenGenerator(UserDetails userDetails) {
-        return tokenGenerator(new HashMap<>(), userDetails);
+    public String extractUserName(String token) {
+        final Claims claims = extractClaims(token);
+        return (String) claims.get("username");
+    }
+    public String tokenGenerator(User user) {
+        return tokenGenerator(new HashMap<>(), user);
     }
 
-    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails details) {
+    public String tokenGenerator(Map<String, Object> extraClaims, User user) {
         Claims claims = Jwts.claims();
         claims.putAll(extraClaims);
+        claims.put("email", user.getEmail()); // Adding email to the claims
+        claims.put("username", user.getUsername()); // Adding username to the claims
 
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString()) // Generate a random UUID for token ID
                 .setClaims(claims)
-                .setSubject(details.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean tokenValidation(String token,UserDetails details){
+
+    public boolean tokenValidation(String token, UserDetails details){
         final String email = extractUserName(token);
         return (email.equals(details.getUsername())) && !tokenExpiration(token);
     }
@@ -60,13 +61,10 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-
-
     public <T> T extractClaim(String token, Function<Claims, T> Reslover){
         final Claims claims = extractClaims(token);
         return Reslover.apply(claims);
     }
-
 
     private Claims extractClaims(String token){
         return Jwts
