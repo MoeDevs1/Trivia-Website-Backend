@@ -26,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
             http
                     .csrf(c -> c.disable())
+
                     .authorizeRequests(ar -> ar
                             .requestMatchers("/api/v1/auth/**").permitAll()
                             .anyRequest().authenticated())
