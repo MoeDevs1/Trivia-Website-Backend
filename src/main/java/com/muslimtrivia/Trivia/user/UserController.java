@@ -18,19 +18,22 @@ public class UserController {
     private final JwtService service;
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUserFromToken(@RequestHeader(value="Authorization") String token) {
+    public ResponseEntity<?> getUserFromToken(@RequestHeader(value = "Authorization") String token) {
         try {
             String email = service.extractEmail(token.replace("Bearer ", ""));
             String username = service.extractUserName(token.replace("Bearer ", ""));
+            String flag = service.extractFlag(token.replace("Bearer ", ""));
 
             Map<String, String> userData = new HashMap<>();
             userData.put("email", email);
             userData.put("username", username);
+            userData.put("flag", flag);
 
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to extract user data from token: " + e.getMessage());
         }
     }
+
 
 }

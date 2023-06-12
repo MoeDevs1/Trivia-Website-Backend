@@ -44,6 +44,8 @@ public class AuthService {
                 .userName(request.getUserName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
+                .flag(request.getFlag()) // Set the flag value to United States
+
                 .build();
         repository.save(user);
         var jwtToken = jwtService.tokenGenerator(user);
@@ -87,6 +89,7 @@ public class AuthService {
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String firstName = (String) payload.get("given_name"); // Extract the user's first name from the payload
+            String flag = "United States"; // Set the default flag value to United States
 
             if (repository.existsByEmail(email)) {
                 throw new RuntimeException("Email is already registered. Please choose a different email.");
@@ -96,9 +99,10 @@ public class AuthService {
             var user = User.builder()
                     .email(email)
                     .userName(userName)
-                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Storing a hashed random password instead of null
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .role(Role.USER)
-                    .googleSignup(true) // Set googleSignup to true for Google signup
+                    .googleSignup(true)
+                    .flag(flag) // Set the flag value to United States
                     .build();
 
             repository.save(user);
@@ -109,17 +113,6 @@ public class AuthService {
         } else {
             throw new RuntimeException("Invalid Google token.");
         }
-    }
-
-    private String generateUniqueUsername(String firstName) {
-        String baseUsername = firstName.replaceAll("\\s+", "").toLowerCase();
-        String username = baseUsername;
-        int count = 1;
-        while (repository.existsByUserName(username)) {
-            username = baseUsername + count;
-            count++;
-        }
-        return username;
     }
 
     public AuthResponse loginGoogle(GoogleRegisterRequest request) throws GeneralSecurityException, IOException {
@@ -144,6 +137,17 @@ public class AuthService {
         } else {
             throw new RuntimeException("Invalid Google token.");
         }
+    }
+
+    private String generateUniqueUsername(String firstName) {
+        String baseUsername = firstName.replaceAll("\\s+", "").toLowerCase();
+        String username = baseUsername;
+        int count = 1;
+        while (repository.existsByUserName(username)) {
+            username = baseUsername + count;
+            count++;
+        }
+        return username;
     }
 
 }
