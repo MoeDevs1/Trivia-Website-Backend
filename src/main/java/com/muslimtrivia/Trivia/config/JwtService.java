@@ -22,7 +22,9 @@ public class JwtService {
     private static final String secretKey = "5971337336763979244226452948404D635166546A576E5A7234753777217A25\n";
 
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+        final Claims claims = extractClaims(token);
+        return (String) claims.get("email");
+
     }
 
     public String extractUserName(String token) {

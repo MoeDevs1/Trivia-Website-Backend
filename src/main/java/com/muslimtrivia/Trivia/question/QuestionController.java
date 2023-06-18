@@ -1,11 +1,8 @@
-package com.muslimtrivia.Trivia.game;
+package com.muslimtrivia.Trivia.question;
 
-import com.muslimtrivia.Trivia.game.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -29,10 +26,13 @@ public class QuestionController {
         return ResponseEntity.ok(questions);
     }
 
-    @GetMapping("/questions/{difficulty}")
-    public ResponseEntity<List<Questions>> getQuestionsByDifficulty(@PathVariable String difficulty) {
+    @GetMapping("/questions/{difficulty}/{numberOfQuestions}")
+    public ResponseEntity<List<Questions>> getQuestionsByDifficulty(
+            @PathVariable String difficulty,
+            @PathVariable int numberOfQuestions
+    ) {
         DifficultyLevel difficultyLevel = DifficultyLevel.valueOf(difficulty.toUpperCase());
-        List<Questions> questions = questionService.getQuestionsByDifficulty(difficultyLevel);
+        List<Questions> questions = questionService.getQuestionsByDifficulty(difficultyLevel, numberOfQuestions);
         return ResponseEntity.ok(questions);
     }
 
@@ -43,9 +43,11 @@ public class QuestionController {
         return ResponseEntity.ok(question);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/questions/{id}")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Integer id) {
         questionService.deleteQuestion(id);
         return ResponseEntity.ok().build();
     }
+
+
 }

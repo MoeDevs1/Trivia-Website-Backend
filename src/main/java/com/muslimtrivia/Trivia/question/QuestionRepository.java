@@ -1,6 +1,5 @@
-package com.muslimtrivia.Trivia.game;
+package com.muslimtrivia.Trivia.question;
 
-import com.muslimtrivia.Trivia.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

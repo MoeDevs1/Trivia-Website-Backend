@@ -32,6 +32,8 @@ public class User implements UserDetails {
     private Role role;
     private boolean googleSignup; // New field for Google signup users
     private String flag;
+    private int score;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
@@ -68,6 +70,7 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 
 
 }

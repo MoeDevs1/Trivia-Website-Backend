@@ -1,12 +1,10 @@
-package com.muslimtrivia.Trivia.game;
+package com.muslimtrivia.Trivia.question;
 
-import com.muslimtrivia.Trivia.game.DifficultyLevel;
-import com.muslimtrivia.Trivia.game.QuestionRepository;
-import com.muslimtrivia.Trivia.game.Questions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 @RequiredArgsConstructor
 
@@ -27,9 +25,12 @@ public class QuestionService {
     }
 
     @Transactional(readOnly = true)
-    public List<Questions> getQuestionsByDifficulty(DifficultyLevel difficultyLevel) {
-        // Here you would add a method to QuestionRepository to find questions by difficulty
-        return questionRepository.findByDifficultyLevel(difficultyLevel);
+    public List<Questions> getQuestionsByDifficulty(DifficultyLevel difficultyLevel, int numberOfQuestions) {
+        List<Questions> allQuestions = questionRepository.findByDifficultyLevel(difficultyLevel);
+        Collections.shuffle(allQuestions); // Shuffle the questions randomly
+
+        // Return a sublist containing the desired number of questions
+        return allQuestions.subList(0, numberOfQuestions);
     }
 
     @Transactional

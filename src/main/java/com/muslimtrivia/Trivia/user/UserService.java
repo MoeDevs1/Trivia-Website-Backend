@@ -3,6 +3,7 @@ package com.muslimtrivia.Trivia.user;
 import com.muslimtrivia.Trivia.config.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public Optional<User> getCurrentUser(String userName) {
+        return userRepository.findByUserName(userName);
+    }
     public Map<String, String> extractUserDataFromToken(String token) throws Exception {
         String email = jwtService.extractEmail(token);
         String username = jwtService.extractUserName(token);

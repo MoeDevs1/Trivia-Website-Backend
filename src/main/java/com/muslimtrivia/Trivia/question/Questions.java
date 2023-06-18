@@ -1,4 +1,4 @@
-package com.muslimtrivia.Trivia.game;
+package com.muslimtrivia.Trivia.question;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
