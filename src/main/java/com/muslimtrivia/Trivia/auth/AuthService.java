@@ -89,7 +89,7 @@ public class AuthService {
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String firstName = (String) payload.get("given_name"); // Extract the user's first name from the payload
-            String flag = "United States"; // Set the default flag value to United States
+            String flag = "us"; // Set the default flag value to United States
 
             if (repository.existsByEmail(email)) {
                 throw new RuntimeException("Email is already registered. Please choose a different email.");
