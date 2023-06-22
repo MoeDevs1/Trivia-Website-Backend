@@ -3,10 +3,12 @@ package com.muslimtrivia.Trivia.user;
 import com.muslimtrivia.Trivia.auth.AuthService;
 import com.muslimtrivia.Trivia.config.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,6 +19,20 @@ public class UserController {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final UserRepository userRepository;
+
+
+    @GetMapping("/topUsers")
+    public ResponseEntity<List<TopUserDTO>> getTopUsers() {
+        try {
+            List<TopUserDTO> topUsers = userService.getTopUsers();
+            return ResponseEntity.ok(topUsers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(List.of());
+        }
+    }
+
+
 
     @GetMapping("/user")
     public ResponseEntity<?> getUserFromToken(@RequestHeader(value = "Authorization") String token) {
@@ -28,6 +44,7 @@ public class UserController {
         }
 
     }
+
     @PutMapping("/changeUsername")
     public ResponseEntity<Map<String, String>> changeUserName(@RequestHeader(value = "Authorization") String token,
                                                               @RequestBody ChangeUsernameRequest request) {
@@ -37,6 +54,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to update username: " + e.getMessage()));
         }
     }
+
     @PutMapping("/changeFlag")
     public ResponseEntity<Map<String, String>> changeUserFlag(@RequestHeader(value = "Authorization") String token,
                                                               @RequestBody ChangeFlagRequest request) {
@@ -46,6 +64,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to update flag: " + e.getMessage()));
         }
     }
+
     @PutMapping("/changeEmail")
     public ResponseEntity<Map<String, String>> changeUserEmail(@RequestHeader(value = "Authorization") String token,
                                                                @RequestBody ChangeEmailRequest request) {
@@ -65,5 +84,6 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to update password: " + e.getMessage()));
         }
     }
+
 
 }

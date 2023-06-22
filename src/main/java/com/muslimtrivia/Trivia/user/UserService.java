@@ -2,14 +2,15 @@ package com.muslimtrivia.Trivia.user;
 
 import com.muslimtrivia.Trivia.config.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public List<TopUserDTO> getTopUsers() {
+        Pageable topTwenty = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "score"));
+        List<User> topUsers = userRepository.findTopUsers(topTwenty);
+
+        List<TopUserDTO> topUserDTOs = new ArrayList<>();
+
+        for (User user : topUsers) {
+            TopUserDTO dto = new TopUserDTO();
+            dto.setUsername(user.getUsername());
+            dto.setScore(user.getScore());
+            dto.setFlag(user.getFlag());
+            topUserDTOs.add(dto);
+        }
+
+        return topUserDTOs;
+    }
+
+
     public Optional<User> getCurrentUser(String userName) {
         return userRepository.findByUserName(userName);
     }
@@ -26,14 +45,16 @@ public class UserService {
         String email = jwtService.extractEmail(token);
         String username = jwtService.extractUserName(token);
         String flag = jwtService.extractFlag(token);
+        Integer score = jwtService.extractPoints(token);
 
         Map<String, String> userData = new HashMap<>();
         userData.put("email", email);
         userData.put("username", username);
+        userData.put("score", score.toString()); // convert to string here
         userData.put("flag", flag);
-
         return userData;
     }
+
 
 
 

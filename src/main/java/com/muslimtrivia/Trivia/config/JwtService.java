@@ -32,6 +32,11 @@ public class JwtService {
         return (String) claims.get("username");
     }
 
+    public Integer extractPoints(String token) {
+        final Claims claims = extractClaims(token);
+        return (Integer) claims.get("score");
+    }
+
     public String extractFlag(String token) {
         final Claims claims = extractClaims(token);
         return (String) claims.get("flag");
@@ -47,6 +52,7 @@ public class JwtService {
         claims.put("email", user.getEmail()); // Adding email to the claims
         claims.put("username", user.getUsername()); // Adding username to the claims
         claims.put("flag", user.getFlag()); // Adding flag to the claims
+        claims.put("score", user.getScore()); // Adding flag to the claims
 
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString()) // Generate a random UUID for token ID
